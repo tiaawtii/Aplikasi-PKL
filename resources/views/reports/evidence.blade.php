@@ -68,7 +68,7 @@
                     <thead class="bg-gray-50 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
                         <tr>
                             <th class="px-6 py-3 text-left">Pelaksana / Pekerjaan</th>
-                            <th class="px-4 py-3">Foto Bukti Dokumen</th>
+                            <th class="px-4 py-3">Bukti Dokumen (File/Foto)</th>
                             <th class="px-4 py-3">Foto Bukti Review</th>
                             <th class="px-4 py-3">Status</th>
                         </tr>
@@ -85,11 +85,25 @@
                             <td class="px-4 py-4">
                                 <div class="flex justify-center">
                                     @if($obs->bukti_dokumen_path)
-                                        <a href="{{ asset('storage/' . $obs->bukti_dokumen_path) }}" target="_blank">
-                                            <img src="{{ asset('storage/' . $obs->bukti_dokumen_path) }}" class="h-16 w-24 object-cover rounded shadow-sm border hover:scale-110 transition-transform">
-                                        </a>
+                                        @php 
+                                            $extension = pathinfo($obs->bukti_dokumen_path, PATHINFO_EXTENSION);
+                                            $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png']);
+                                        @endphp
+                                        
+                                        @if($isImage)
+                                            <a href="{{ asset('storage/' . $obs->bukti_dokumen_path) }}" target="_blank">
+                                                <img src="{{ asset('storage/' . $obs->bukti_dokumen_path) }}" class="h-16 w-24 object-cover rounded shadow-sm border hover:scale-110 transition-transform">
+                                            </a>
+                                        @else
+                                            <a href="{{ asset('storage/' . $obs->bukti_dokumen_path) }}" target="_blank" class="flex flex-col items-center group">
+                                                <svg class="w-10 h-10 text-indigo-500 group-hover:text-indigo-700 transition" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M4 4a2 2 0 012-2h4.586A1 1 0 0111 2.414l4.293 4.293V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path>
+                                                </svg>
+                                                <span class="text-[9px] font-bold text-indigo-600 mt-1 uppercase">Buka {{ $extension }}</span>
+                                            </a>
+                                        @endif
                                     @else
-                                        <span class="text-red-400 text-[10px] italic">Tidak Ada Foto</span>
+                                        <span class="text-red-400 text-[10px] italic">Tidak Ada File</span>
                                     @endif
                                 </div>
                             </td>
@@ -108,7 +122,7 @@
                                 @if($obs->bukti_dokumen_path && $obs->foto_review_path)
                                     <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-[10px] font-bold uppercase border border-green-200">Lengkap</span>
                                 @else
-                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-[10px] font-bold uppercase border border-yellow-200">Parsial</span>
+                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-[10px] font-bold uppercase border border-yellow-200">Tidak Lengkap</span>
                                 @endif
                             </td>
                         </tr>

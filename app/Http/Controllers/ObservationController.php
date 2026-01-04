@@ -14,7 +14,7 @@ class ObservationController extends Controller
 {
     public function index()
     {
-        // Mengambil data observasi dengan urutan inputan terbaru di paling atas
+        // Tetap menggunakan latest() agar inputan terbaru selalu di atas
         $observations = Observation::with(['company', 'workUnit', 'observer'])->latest()->get(); 
         return view('observations.index', compact('observations'));
     }
@@ -23,8 +23,6 @@ class ObservationController extends Controller
     {
         $companies = Company::all(); 
         $workUnits = WorkUnit::orderByRaw("CASE WHEN nama_unit LIKE 'UP3%' THEN 1 WHEN nama_unit LIKE 'ULP%' THEN 2 ELSE 3 END, nama_unit ASC")->get();
-        
-        // MENGAMBIL DATA MASTER PEGAWAI K3LK
         $observers = K3lkEmployee::orderBy('nama_pegawai', 'asc')->get(); 
         
         return view('observations.create', compact('companies', 'workUnits', 'observers')); 
@@ -49,7 +47,8 @@ class ObservationController extends Controller
             'unsafe_actions_conditions' => 'nullable',
             'review_disampaikan' => 'nullable',
             'rekomendasi_perbaikan' => 'nullable',
-            'bukti_dokumen' => 'nullable|image|max:2048', 
+            // Mendukung file dokumen dan foto dengan limit 5MB
+            'bukti_dokumen' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120', 
             'foto_review' => 'nullable|image|max:2048',
         ]);
 
@@ -81,22 +80,24 @@ class ObservationController extends Controller
         $tidakAmanObs = $allObservations->where('dokumen_dilaksanakan_baik', 'Tidak')->count();
         
         $complianceRate = ($totalObsThisMonth > 0) ? round(($amanObs / $totalObsThisMonth) * 100, 1) : 0;
-        
-        // REVISI: Menggunakan latest() agar data terbaru berdasarkan waktu input muncul di dashboard
         $latestObservations = Observation::latest()->take(5)->get();
         
         $reviewSelesai = Observation::where('review_bersama_pekerja', 'Ya')->count();
         $reviewTotal = Observation::count();
         $reviewCompletionRate = ($reviewTotal > 0) ? round(($reviewSelesai / $reviewTotal) * 100, 1) : 0;
 
-        // --- LOGIKA TREN OBSERVASI (6 BULAN TERAKHIR) ---
-        $trendData = Observation::selectRaw("DATE_FORMAT(tanggal, '%M') as bulan, COUNT(*) as total, MONTH(tanggal) as bulan_angka")
+        // --- PERBAIKAN GRAFIK TREN: Menggunakan urutan kronologis Tahun+Bulan ---
+        $trendData = Observation::selectRaw("
+                DATE_FORMAT(tanggal, '%M %Y') as bulan_tahun, 
+                COUNT(*) as total, 
+                DATE_FORMAT(tanggal, '%Y%m') as urutan
+            ")
             ->where('tanggal', '>=', now()->subMonths(5)->startOfMonth())
-            ->groupBy('bulan', 'bulan_angka')
-            ->orderBy('bulan_angka', 'asc')
+            ->groupBy('bulan_tahun', 'urutan')
+            ->orderBy('urutan', 'asc') // Urutkan 202512 sebelum 202601
             ->get();
 
-        $labelsTrend = $trendData->pluck('bulan')->toArray(); 
+        $labelsTrend = $trendData->pluck('bulan_tahun')->toArray(); 
         $dataTrend = $trendData->pluck('total')->toArray();   
 
         return view('dashboard', compact(
@@ -126,7 +127,6 @@ class ObservationController extends Controller
         if ($statusAman) $query->where('dokumen_dilaksanakan_baik', $statusAman);
         if (!empty($perusahaan)) $query->where('company_id', $perusahaan); 
 
-        // REVISI: Menggunakan latest() tanpa parameter
         $semua_observasi = $query->latest()->get();
         $list_unit = WorkUnit::pluck('nama_unit', 'id');
         $list_perusahaan = Company::orderBy('nama', 'asc')->pluck('nama', 'id'); 
@@ -188,7 +188,6 @@ class ObservationController extends Controller
         if (!empty($perusahaan)) $query->where('company_id', $perusahaan); 
         if (!empty($namaPersonel)) $query->where('nama_personel_diobservasi', $namaPersonel);
 
-        // REVISI: Menggunakan latest() agar data terbaru masuk di urutan pertama (Fix Masalah Irul)
         $observations = $query->latest()->get();
 
         if ($filterDokumen == 'Lengkap') {
@@ -220,7 +219,6 @@ class ObservationController extends Controller
         if ($namaFilter) $query->where('nama_personel_diobservasi', $namaFilter); 
         if ($perusahaan) $query->where('company_id', $perusahaan);
         
-        // REVISI: Menggunakan latest() agar riwayat terbaru di posisi pertama
         $observations = $query->latest()->get();
         $riwayat_individu = [];
 
@@ -264,17 +262,11 @@ class ObservationController extends Controller
             $query->where('jenis_pekerjaan', 'LIKE', '%' . $cariPekerjaan . '%');
         }
 
-        // REVISI: Menggunakan latest()
         $semua_observasi = $query->latest()->get();
         $list_perusahaan = Company::orderBy('nama', 'asc')->pluck('nama', 'id');
 
         return view('reports.evidence', compact(
-            'semua_observasi', 
-            'tglAwal', 
-            'tglAkhir', 
-            'list_perusahaan', 
-            'perusahaan', 
-            'cariPekerjaan'
+            'semua_observasi', 'tglAwal', 'tglAkhir', 'list_perusahaan', 'perusahaan', 'cariPekerjaan'
         ));
     }
 
@@ -303,7 +295,6 @@ class ObservationController extends Controller
         if ($namaFilter) $query->where('nama_personel_diobservasi', $namaFilter); 
         if (!empty($cariPekerjaan)) $query->where('jenis_pekerjaan', 'LIKE', '%' . $cariPekerjaan . '%');
 
-        // REVISI: Menggunakan latest() untuk semua cetakan PDF agar urutan konsisten
         if ($jenis == 'evidence') {
             $semua_observasi = $query->latest()->take(100)->get(); 
         } else {
@@ -394,7 +385,7 @@ class ObservationController extends Controller
             'unsafe_actions_conditions' => 'nullable',
             'review_disampaikan' => 'nullable',
             'rekomendasi_perbaikan' => 'nullable',
-            'bukti_dokumen' => 'nullable|image|max:2048', 
+            'bukti_dokumen' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120', 
             'foto_review' => 'nullable|image|max:2048',
         ]);
 

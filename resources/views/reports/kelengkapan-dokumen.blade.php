@@ -111,14 +111,13 @@
                     <thead class="bg-gray-50 text-center text-[10px] font-bold text-gray-500 uppercase tracking-wider">
                         <tr>
                             <th class="px-6 py-3 text-left">Pelaksana & Nama Personel</th>
-                            {{-- KOLOM BARU DI SAMPING --}}
                             <th class="px-2 py-3">No. WP</th>
                             <th class="px-2 py-3">WP</th>
                             <th class="px-2 py-3">SOP</th>
                             <th class="px-2 py-3">JSA</th>
                             <th class="px-2 py-3">IK</th>
                             <th class="px-2 py-3">IBPPR</th>
-                            <th class="px-6 py-3 text-right">Bukti Foto</th>
+                            <th class="px-6 py-3 text-right">Lampiran Bukti</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200 text-center text-sm">
@@ -133,12 +132,10 @@
                                 <div class="text-[10px] text-gray-400 italic mt-1">Tanggal: {{ \Carbon\Carbon::parse($obs->tanggal)->format('d-m-Y') }}</div>
                             </td>
                             
-                            {{-- KOLOM NOMOR WP --}}
                             <td class="px-2 py-4">
                                 <span class="text-[11px] font-bold text-green-700">{{ $obs->no_wp ?? '-' }}</span>
                             </td>
 
-                            {{-- KOLOM CENTANG DOKUMEN --}}
                             @foreach(['WP', 'SOP', 'JSA', 'IK', 'IBPPR'] as $doc)
                             <td class="px-2 py-4">
                                 @if(in_array($doc, $docs))
@@ -151,9 +148,18 @@
 
                             <td class="px-6 py-4 text-right whitespace-nowrap">
                                 @if($obs->bukti_dokumen_path)
+                                    @php 
+                                        $extension = pathinfo($obs->bukti_dokumen_path, PATHINFO_EXTENSION);
+                                        $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png']);
+                                    @endphp
+
                                     <a href="{{ asset('storage/' . $obs->bukti_dokumen_path) }}" target="_blank" 
                                        class="inline-flex items-center text-indigo-600 hover:text-indigo-900 text-[10px] font-bold border border-indigo-200 px-3 py-1.5 rounded-lg bg-indigo-50 transition">
-                                        Lihat Foto
+                                       @if($isImage)
+                                          Lihat Foto
+                                       @else
+                                          Lihat Dokumen
+                                       @endif
                                     </a>
                                 @else
                                     <span class="text-gray-400 text-[10px] italic bg-gray-100 px-2 py-1 rounded">Tidak ada</span>

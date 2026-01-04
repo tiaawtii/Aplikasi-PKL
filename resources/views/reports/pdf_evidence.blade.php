@@ -105,10 +105,9 @@
             background: #eee;
         }
 
-        /* FIX POSISI TANGGAL DI SEBELAH KANAN DENGAN JARAK YANG PAS */
         .footer-date { 
             margin-top: 30px; 
-            text-align: right; /* Kembali ke kanan */
+            text-align: right; 
             font-size: 10px; 
             padding-right: 10px;
         }
@@ -154,8 +153,21 @@
         <div class="photo-section">
             <div class="photo-box">
                 @if($obs->bukti_dokumen_path)
-                    <img src="{{ public_path('storage/' . $obs->bukti_dokumen_path) }}" class="img-evidence">
-                    <div class="photo-caption">FOTO DOKUMEN</div>
+                    @php 
+                        $extension = pathinfo($obs->bukti_dokumen_path, PATHINFO_EXTENSION);
+                        $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png']);
+                    @endphp
+
+                    @if($isImage)
+                        <img src="{{ public_path('storage/' . $obs->bukti_dokumen_path) }}" class="img-evidence">
+                        <div class="photo-caption">FOTO DOKUMEN</div>
+                    @else
+                        {{-- Tampilan jika lampiran bukan foto (PDF/DOC) agar tidak pecah di PDF --}}
+                        <div style="width:150px; height:100px; border:1px solid #000; line-height:20px; font-size:8px; text-align:center; padding-top:35px; background-color: #f9f9f9;">
+                            DOKUMEN LAMPIRAN<br>({{ strtoupper($extension) }})
+                        </div>
+                        <div class="photo-caption">FILE DOKUMEN</div>
+                    @endif
                 @else
                     <div style="width:150px; height:100px; border:1px solid #000; line-height:100px; font-size:8px; text-align:center;">TIDAK ADA FOTO</div>
                 @endif
@@ -175,9 +187,8 @@
     <p style="text-align:center;">Data tidak ditemukan.</p>
     @endforelse
 
-    {{-- POSISI SUDAH DI KANAN SEKARANG --}}
     <div class="footer-date">
-        Banjarmasin, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}
+        Banjarmasin, {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM YYYY') }}
     </div>
 </body>
 </html>
