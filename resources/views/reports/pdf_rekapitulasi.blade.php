@@ -27,6 +27,11 @@
     </style>
 </head>
 <body>
+    @php
+        // Memaksa Carbon menggunakan bahasa Indonesia secara manual
+        \Carbon\Carbon::setLocale('id');
+    @endphp
+
     <div class="kop-surat">
         <img src="{{ public_path('images/logo-pln.png') }}" class="logo-pln">
         <div class="instansi">
@@ -39,8 +44,8 @@
 
     <div class="title-laporan">Laporan Rekapitulasi Data Observasi & Temuan Bahaya</div>
     <div class="info-periode">
-        Periode: {{ $startDate ? \Carbon\Carbon::parse($startDate)->format('d/m/Y') : 'Semua' }} 
-        s/d {{ $endDate ? \Carbon\Carbon::parse($endDate)->format('d/m/Y') : 'Semua' }}
+        Periode: {{ $startDate ? \Carbon\Carbon::parse($startDate)->translatedFormat('d F Y') : 'Semua' }} 
+        s/d {{ $endDate ? \Carbon\Carbon::parse($endDate)->translatedFormat('d F Y') : 'Semua' }}
     </div>
 
     <table>
@@ -60,7 +65,7 @@
                 <td>
                     <strong>{{ $obs->workUnit->nama_unit ?? '-' }}</strong><br>
                     {{ $obs->jenis_pekerjaan }}<br>
-                    <small>Tgl: {{ \Carbon\Carbon::parse($obs->tanggal)->format('d/m/Y') }}</small>
+                    <small>Tgl: {{ \Carbon\Carbon::parse($obs->tanggal)->translatedFormat('d F Y') }}</small>
                 </td>
                 <td>{{ $obs->company->nama ?? '-' }}</td>
                 <td class="text-center">
@@ -86,7 +91,7 @@
     </table>
 
     <div class="footer-date">
-        Banjarmasin, {{ date('d F Y') }}
+        Banjarmasin, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}
     </div>
 </body>
 </html>
