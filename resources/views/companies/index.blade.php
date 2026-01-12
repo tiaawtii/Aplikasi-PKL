@@ -28,7 +28,7 @@
                         {{-- TOMBOL TAMBAH HANYA UNTUK ADMIN --}}
                         @if(Auth::user()->role === 'admin')
                             <a href="{{ route('companies.create') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow-md transition duration-150 ease-in-out">
-                                + Tambah Perusahaan Baru
+                                Tambah Perusahaan Baru
                             </a>
                         @endif
                     </div>

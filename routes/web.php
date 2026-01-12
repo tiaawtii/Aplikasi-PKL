@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ObservationController; // Panggil Controller JSO
-use App\Http\Controllers\CompanyController; //panggil controller perusahaan pelaksana
-use App\Http\Controllers\K3lkEmployeeController; //panggil controller pegawai K3LK
+use App\Http\Controllers\CompanyController; // panggil controller perusahaan pelaksana
+use App\Http\Controllers\K3lkEmployeeController; // panggil controller pegawai K3LK
 use App\Http\Controllers\UserController; // Panggil Controller User Management
 use Illuminate\Support\Facades\Route;
 
@@ -30,19 +30,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // MASTER DATA (Akses Lihat: Admin & User | Akses Edit: Khusus Admin)
     // ============================================================
     
-    // Rute ini dipindah ke luar agar User biasa bisa melihat daftar
+    // PERBAIKAN: Route Create diletakkan DI ATAS agar tidak dianggap sebagai ID (Mencegah Error show)
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/k3lk_employees/create', [K3lkEmployeeController::class, 'create'])->name('k3lk_employees.create');
+        Route::get('/companies/create', [CompanyController::class, 'create'])->name('companies.create');
+    });
+
+    // Rute Lihat Daftar (Admin & User)
     Route::get('/k3lk_employees', [K3lkEmployeeController::class, 'index'])->name('k3lk_employees.index');
     Route::get('/k3lk_employees/{k3lk_employee}', [K3lkEmployeeController::class, 'show'])->name('k3lk_employees.show');
 
     Route::get('/companies', [CompanyController::class, 'index'])->name('companies.index');
     Route::get('/companies/{company}', [CompanyController::class, 'show'])->name('companies.show');
 
-    // KHUSUS ADMIN (Tambah, Edit, Hapus)
+    // KHUSUS ADMIN (Edit, Update, Hapus)
     Route::middleware(['role:admin'])->group(function () {
         
-        // Resource untuk Pegawai & Perusahaan (Hanya untuk aksi modifikasi data)
-        Route::resource('k3lk_employees', K3lkEmployeeController::class)->except(['index', 'show']);
-        Route::resource('companies', CompanyController::class)->except(['index', 'show'])->names('companies'); 
+        // Resource untuk Pegawai & Perusahaan (Aksi modifikasi data selain create, index, show)
+        Route::resource('k3lk_employees', K3lkEmployeeController::class)->except(['index', 'show', 'create']);
+        Route::resource('companies', CompanyController::class)->except(['index', 'show', 'create'])->names('companies'); 
         
         // Manajemen User (Tambah Role & Edit User)
         Route::resource('users', UserController::class)->only(['index', 'edit', 'update']);
@@ -53,7 +59,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // DATA OBSERVASI (Akses: Admin & User)
     // ============================================================
     
-    // 2 Data Observasi & Formulir Input (Menggunakan Resource Route)
+    // Data Observasi & Formulir Input (Menggunakan Resource Route)
     Route::resource('observations', ObservationController::class)->except(['show']);
     
     // Rute Detail (Show)
