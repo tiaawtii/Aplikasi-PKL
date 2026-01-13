@@ -57,7 +57,8 @@
     </table>
 
     <div style="margin-top: 50px; text-align: right;">
-        Banjarmasin, {{ date('d F Y') }}
+        {{-- PERBAIKAN: Memastikan bulan menggunakan Bahasa Indonesia --}}
+        Banjarmasin, {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }}
     </div>
 </body>
 </html>

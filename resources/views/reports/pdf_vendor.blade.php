@@ -35,7 +35,10 @@
     <div class="title-laporan">Laporan Kinerja Keselamatan Perusahaan Pelaksana (Vendor)</div>
     
     <div class="summary">
-        Ringkasan Periode: {{ $startDate ?? 'Awal' }} s/d {{ $endDate ?? 'Sekarang' }}
+        Ringkasan Periode: 
+        {{ $startDate ? \Carbon\Carbon::parse($startDate)->locale('id')->translatedFormat('d F Y') : 'Awal' }} 
+        s/d 
+        {{ $endDate ? \Carbon\Carbon::parse($endDate)->locale('id')->translatedFormat('d F Y') : 'Sekarang' }}
     </div>
 
     <table>
@@ -62,7 +65,8 @@
     </table>
 
     <div style="margin-top: 50px; text-align: right;">
-        Banjarmasin, {{ date('d F Y') }}<br><br><br><br>
+        {{-- PERBAIKAN FINAL: Paksa Locale ke Indonesia --}}
+        Banjarmasin, {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }}<br><br><br><br>
     </div>
 </body>
 </html>

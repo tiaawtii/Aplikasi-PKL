@@ -58,11 +58,10 @@
                         </div>
                     </div>
 
-                    {{-- 3. Card Aksi Cepat (Sekarang sudah dalam Card Putih) --}}
+                    {{-- 3. Card Aksi Cepat --}}
                     <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-md border border-gray-100">
                         <h4 class="text-sm font-bold text-gray-700 mb-4 uppercase tracking-tighter ml-1">Aksi Cepat</h4>
                         <div class="space-y-4">
-                            {{-- Warna Solid 1: Indigo --}}
                             <a href="{{ route('observations.create') }}" class="group flex items-center p-4 bg-indigo-600 rounded-xl shadow-lg hover:bg-indigo-700 transition-all active:scale-95 text-white">
                                 <div class="bg-white/20 p-2 rounded-lg mr-3">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
@@ -70,7 +69,6 @@
                                 <span class="font-bold text-sm uppercase">Input JSO</span>
                             </a>
                             
-                            {{-- Warna Solid 2: Slate --}}
                             <a href="{{ route('reports.index') }}" class="group flex items-center p-4 bg-slate-700 rounded-xl shadow-lg hover:bg-slate-800 transition-all active:scale-95 text-white">
                                 <div class="bg-white/20 p-2 rounded-lg mr-3">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -109,12 +107,30 @@
                 }
             });
 
-            // 2. Bar Chart
+            // 2. Bar Chart (Perbaikan Nama Bulan Indonesia)
+            const monthMap = {
+                'January': 'Januari', 'February': 'Februari', 'March': 'Maret',
+                'April': 'April', 'May': 'Mei', 'June': 'Juni',
+                'July': 'Juli', 'August': 'Agustus', 'September': 'September',
+                'October': 'Oktober', 'November': 'November', 'December': 'Desember'
+            };
+
+            const rawLabels = {!! json_encode($labelsTrend) !!};
+            const translatedLabels = rawLabels.map(label => {
+                // Mencocokkan nama bulan Inggris di dalam string label
+                for (const [eng, ind] of Object.entries(monthMap)) {
+                    if (label.includes(eng)) {
+                        return label.replace(eng, ind);
+                    }
+                }
+                return label;
+            });
+
             const ctx2 = document.getElementById('trendChart');
             new Chart(ctx2, {
                 type: 'bar',
                 data: {
-                    labels: {!! json_encode($labelsTrend) !!},
+                    labels: translatedLabels,
                     datasets: [{
                         label: 'Observasi',
                         data: {!! json_encode($dataTrend) !!},
